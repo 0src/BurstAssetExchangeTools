@@ -1,0 +1,41 @@
+{
+  "name": "burstaetools",
+  "version": "1.0.2",
+  "description": "A minimal but powerful Burst Asset Exchange Tools.",
+  "main": "src/index.js",
+  "author": "Zeus <burstnation.com>",
+  "scripts": {
+    "start": "electron ./app",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.47",
+    "electron": "^1.8.1",
+    "electron-builder": "^19.41.1",
+    "electron-builder-squirrel-windows": "^19.41.0"
+  },
+  "dependencies": {
+    "axios": "^0.16.2",
+    "electron-json-storage": "^3.2.0",
+    "es6-promise": "^4.1.1",
+    "hammerjs": "^2.0.8",
+    "jquery": "^3.2.1",
+    "materialize-css": "^0.100.2",
+    "operative": "^0.4.6"
+  },
+  "build": {
+    "appId": "dividends.burstnation.com",
+    "productName": "Burst AE Tools",
+    "win": {
+      "target": "squirrel",
+      "icon": "build/icon.ico",
+      "publisherName": "BurstNation.com"
+    },
+    "squirrelWindows": {
+      "iconUrl": "https://raw.githubusercontent.com/GoldZeus/BurstAssetExchange/master/app/build/icon.ico",
+      "loadingGif": "build/install-spinner.gif"
+    }
+  }
+}

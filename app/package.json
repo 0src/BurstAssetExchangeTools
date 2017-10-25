@@ -1,0 +1,7 @@
+{
+  "name": "burstaetools",
+  "version": "1.0.2",
+  "description": "A minimal but powerful Burst Asset Exchange Tools.",
+  "main": "index.js",
+  "author": "Zeus <burstnation.com>"
+}

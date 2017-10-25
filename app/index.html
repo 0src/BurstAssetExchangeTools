@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>BURST Dividends Payout</title>
+  <!--Import materialize.css-->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link type="text/css" rel="stylesheet" href="../node_modules/materialize-css/dist/css/materialize.min.css"  media="screen,projection"/>
+  <style>
+    #app {
+      display: none;
+      margin-bottom: 50px;
+    }
+    .fixed-footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      padding: 0 10px;
+      z-index: 9999999;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      resize: vertical;
+    }
+  </style>
+
+  <!--Let browser know website is optimized for mobile-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body class="blue-grey lighten-5">
+<main style="margin-top: 20px;">
+  <div id="beforeApp" class="container">
+    <div class="row">
+      <div class="col s12 center-align" style="margin-top: 20%">
+        <div class="preloader-wrapper big active">
+          <div class="spinner-layer spinner-blue">
+            <div class="circle-clipper left">
+              <div class="circle"></div>
+            </div><div class="gap-patch">
+            <div class="circle"></div>
+          </div><div class="circle-clipper right">
+            <div class="circle"></div>
+          </div>
+          </div>
+
+          <div class="spinner-layer spinner-red">
+            <div class="circle-clipper left">
+              <div class="circle"></div>
+            </div><div class="gap-patch">
+            <div class="circle"></div>
+          </div><div class="circle-clipper right">
+            <div class="circle"></div>
+          </div>
+          </div>
+
+          <div class="spinner-layer spinner-yellow">
+            <div class="circle-clipper left">
+              <div class="circle"></div>
+            </div><div class="gap-patch">
+            <div class="circle"></div>
+          </div><div class="circle-clipper right">
+            <div class="circle"></div>
+          </div>
+          </div>
+
+          <div class="spinner-layer spinner-green">
+            <div class="circle-clipper left">
+              <div class="circle"></div>
+            </div><div class="gap-patch">
+            <div class="circle"></div>
+          </div><div class="circle-clipper right">
+            <div class="circle"></div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="app" class="container">
+    <div class="row">
+      <div class="col s12">
+        <div class="input-field col s12">
+          <input type="password" id="phrase" placeholder="PASS PHRASE">
+          <label for="phrase">Issuer Wallet Phrase <span class="js-account-rs"></span></label>
+        </div>
+
+        <div class="input-field col s12 m4">
+          <select id="asset">
+            <option value="" selected disabled>- NONE -</option>
+          </select>
+          <label for="asset">Asset</label>
+        </div>
+
+        <div class="input-field col s12 m4">
+          <input type="number" id="amount" min="0" step="any" placeholder="0" class="validate">
+          <label for="amount">Amount to Pay</label>
+        </div>
+        <div class="input-field col s12 m4">
+          <input type="number" id="payGreater" step="any" value="1" min="0.00000000" class="validate">
+          <label for="payGreater">Pay if greater or equal</label>
+        </div>
+
+        <div class="col s12 m4 offset-m4">
+          <input type="checkbox" class="filled-in" id="subFee" checked="checked" />
+          <label for="subFee">SUBSTRACT FEE</label>
+        </div>
+
+        <div class="input-field col s12">
+          <input type="text" id="exclude" placeholder="BURST-ADD, BURST-ADD">
+          <label for="exclude">Do not pay</label>
+        </div>
+        <div class="col s12">
+          <input type="checkbox" class="filled-in" id="issuerPay" checked="checked" />
+          <label for="issuerPay">DO NOT PAY ISSUER</label>
+        </div>
+
+        <div class="col s12 m6 center-align" style="margin-top: 20px;">
+          <button class="btn waves-effect waves-light js-calculate" type="button" name="action">Calculate
+            <i class="material-icons right">timeline</i>
+          </button>
+        </div>
+        <div class="col s12 m6 center-align" style="margin-top: 20px;">
+          <button class="btn waves-effect waves-light js-activate" type="button" name="action" disabled>Activate
+            <i class="material-icons right">send</i>
+          </button>
+        </div>
+
+        <h5 class="col s12 center-align" style="margin-top: 20px;">RESULT</h5>
+        <div class="input-field col s12">
+          <textarea id="result" readonly placeholder="REQUEST RESPONSE WILL BE SHOWN HERE"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Fixed footer -->
+<div class="fixed-footer blue-grey darken-3 white-text">
+  <p class="js-wallet-connecting">Connecting to wallet... Please wait.</p>
+  <p class="js-wallet-details" style="display: none;">
+    Connected to: <span class="js-connected-server grey-text text-lighten-1"></span> <a href="#editServerModal" class="modal-trigger">(Change)</a>.
+    Block Height: <span class="js-block-height grey-text text-lighten-1"></span>.
+    Brought to you by <a id="nationLink" href="https://www.burstnation.com/" target="_blank">BurstNation</a>
+  </p>
+</div>
+
+<!-- Edit server modal -->
+<div id="editServerModal" class="modal">
+  <div class="modal-content">
+    <h4>Wallet</h4>
+    <p>You are currently connected to: <span class="js-connected-server green-text text-darken-2"></span></p>
+    <p>You can change the online wallet you want to use, just type the url (including http/https and port) you want to connect to.</p>
+    <p>Note: Saving with the field empty, will use the default wallets</p>
+    <div class="row">
+      <div class="input-field col s12">
+        <input id="serverURL" type="url" class="js-server-url validate" placeholder="https://wallet1.burstnation.com:8125">
+        <label for="serverURL">Wallet URL</label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+      <a href="#" class="modal-action modal-close btn-flat waves-effect waves-light">Cancel</a>
+      <a href="#" class="js-save-server btn-flat waves-effect waves-light">Save</a>
+  </div>
+</div>
+
+<script>
+    // You can also require other files to run in this process
+    window.$ = window.jQuery = require('jquery');
+    window.Hammer = require('hammerjs');
+    require('operative');
+    require('materialize-css');
+    require('./app.js');
+</script>
+</body>
+</html>
