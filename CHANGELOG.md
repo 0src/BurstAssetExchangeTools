@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 This section is used to see what changes you might expect in upcoming releases.
 At release time, it will be sent to the release version number.
 
-## [1.0.2] - 2017-10-25
 ### Added
 - Validate account balance before doing a payout.
 - Added CHANGELOG.md
