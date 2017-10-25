@@ -9,7 +9,6 @@ This section is used to see what changes you might expect in upcoming releases.
 At release time, it will be sent to the release version number.
 
 ### Added
-- Validate account balance before doing a payout.
 - Added CHANGELOG.md
 - Added tsconfig.json
 
