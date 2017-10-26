@@ -1,10 +1,9 @@
-import * as storage from 'electron-json-storage';
-
 import {calculatorComponent} from "./calculator";
 import {accountsApi} from "../burst/accounts";
 import {accountsComponent} from "./accounts";
 import {assetsComponents} from "./assets";
-import {History} from "../helpers/history";
+import {history} from "../helpers/history";
+import {database} from "../helpers/database";
 
 declare const $;
 
@@ -25,7 +24,7 @@ class ActivatorComponent {
         this.toPay = calculatorComponent.getToPay();
         this.toStore = calculatorComponent.getToStore();
 
-        History.save('summary', this.$result.text());
+        history.save('summary', this.$result.text());
 
         this.$result.text('Amount paid, Account, TX\n');
         this.send();
@@ -39,8 +38,7 @@ class ActivatorComponent {
 
         accountsApi.sendMoney(accountsComponent.getPassPhrase(), recipient, amount, `[${new Date().toLocaleString()}] ${assetsComponents.getCurrentAsset().name} Dividends Payment`).then(result => {
             if(result.errorCode) {
-                console.log(amount, result);
-                this.$result.text(this.$result.text() + `Error Sending ${account.amountToSend} to ${account.accountRS}. Wait a few minutes and verify if it was sent.\n`);
+                this.$result.text(this.$result.text() + `Error Sending ${account.amountToSend} to ${account.accountRS}. ${result.errorDescription}.\n`);
             } else if(result.transaction) {
                 this.$result.text(this.$result.text() + `${account.amountToSend}, ${account.accountRS}, ${result.transaction}\n`);
             } else {
@@ -64,21 +62,22 @@ class ActivatorComponent {
     }
 
     private store() {
-        storage.set(assetsComponents.getCurrentAsset().asset, this.toStore, err => {
-            if(err) {
-                console.log(err);
+        database.set(assetsComponents.getCurrentAsset().asset, this.toStore).then(() => {
+            $('input, select, button').removeAttr('disabled');
+            this.$activate.attr('disabled', 'disabled');
+        }).catch( err => {
+            console.log(err);
 
-                let html = '';
-                this.toStore.forEach((account) => {
-                    html += `${account.accountRS}, ${account.amountToSend}\n`;
-                });
-                this.$result.text(this.$result.text() + `----------------------\nUnable to save deferred data:\n${html}`);
-            }
+            let html = '';
+            this.toStore.forEach((account) => {
+                html += `${account.accountRS}, ${account.amountToSend}\n`;
+            });
+            this.$result.text(this.$result.text() + `----------------------\nUnable to save deferred data:\n${html}`);
 
             $('input, select, button').removeAttr('disabled');
             this.$activate.attr('disabled', 'disabled');
         });
-        History.save('result', this.$result.text());
+        history.save('result', this.$result.text());
     }
 
     private initjQuery() {

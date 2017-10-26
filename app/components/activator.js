@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const storage = require("electron-json-storage");
 const calculator_1 = require("./calculator");
 const accounts_1 = require("../burst/accounts");
 const accounts_2 = require("./accounts");
 const assets_1 = require("./assets");
 const history_1 = require("../helpers/history");
+const database_1 = require("../helpers/database");
 class ActivatorComponent {
     init() {
         this.initjQuery();
@@ -15,7 +15,7 @@ class ActivatorComponent {
         $('input, select, button').attr('disabled', 'disabled');
         this.toPay = calculator_1.calculatorComponent.getToPay();
         this.toStore = calculator_1.calculatorComponent.getToStore();
-        history_1.History.save('summary', this.$result.text());
+        history_1.history.save('summary', this.$result.text());
         this.$result.text('Amount paid, Account, TX\n');
         this.send();
     }
@@ -25,8 +25,7 @@ class ActivatorComponent {
         const amount = account.amountToSend;
         accounts_1.accountsApi.sendMoney(accounts_2.accountsComponent.getPassPhrase(), recipient, amount, `[${new Date().toLocaleString()}] ${assets_1.assetsComponents.getCurrentAsset().name} Dividends Payment`).then(result => {
             if (result.errorCode) {
-                console.log(amount, result);
-                this.$result.text(this.$result.text() + `Error Sending ${account.amountToSend} to ${account.accountRS}. Wait a few minutes and verify if it was sent.\n`);
+                this.$result.text(this.$result.text() + `Error Sending ${account.amountToSend} to ${account.accountRS}. ${result.errorDescription}.\n`);
             }
             else if (result.transaction) {
                 this.$result.text(this.$result.text() + `${account.amountToSend}, ${account.accountRS}, ${result.transaction}\n`);
@@ -50,19 +49,20 @@ class ActivatorComponent {
         });
     }
     store() {
-        storage.set(assets_1.assetsComponents.getCurrentAsset().asset, this.toStore, err => {
-            if (err) {
-                console.log(err);
-                let html = '';
-                this.toStore.forEach((account) => {
-                    html += `${account.accountRS}, ${account.amountToSend}\n`;
-                });
-                this.$result.text(this.$result.text() + `----------------------\nUnable to save deferred data:\n${html}`);
-            }
+        database_1.database.set(assets_1.assetsComponents.getCurrentAsset().asset, this.toStore).then(() => {
+            $('input, select, button').removeAttr('disabled');
+            this.$activate.attr('disabled', 'disabled');
+        }).catch(err => {
+            console.log(err);
+            let html = '';
+            this.toStore.forEach((account) => {
+                html += `${account.accountRS}, ${account.amountToSend}\n`;
+            });
+            this.$result.text(this.$result.text() + `----------------------\nUnable to save deferred data:\n${html}`);
             $('input, select, button').removeAttr('disabled');
             this.$activate.attr('disabled', 'disabled');
         });
-        history_1.History.save('result', this.$result.text());
+        history_1.history.save('result', this.$result.text());
     }
     initjQuery() {
         this.$activate = $('.js-activate');

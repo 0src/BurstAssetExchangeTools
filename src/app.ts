@@ -3,9 +3,12 @@ import {assetsComponents} from "./components/assets";
 import {serversComponents} from "./components/servers";
 import {calculatorComponent} from "./components/calculator";
 import {activatorComponent} from "./components/activator";
+import {database} from "./helpers/database";
 const { shell } = require('electron');
 
 declare const $;
+
+database;
 
 serversComponents.init().then(() => {
     $('#beforeApp').fadeOut(() => { $('#app').fadeIn() });

@@ -8,16 +8,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 This section is used to see what changes you might expect in upcoming releases.
 At release time, it will be sent to the release version number.
 
+## [1.0.2] - 2017-10-26
 ### Added
+- History files are created when the payout is sent.
+- Type declaration for 90% of the code.
 - Added CHANGELOG.md
 - Added tsconfig.json
+- fs-path package for npm to handle database.js
 
 ### Changed
-- Removed unnecessary source in distribution.
+- Deferred payouts are now stored in the same folder as the app (allowing full portable support).
 - Updated folder structure.
 - Cleaned up the source.
+- Replaced "electron-json-storage" with my own and simpler database.js to handle the database files.
 
 ### Removed
+- Installer, now only providing the folder in zip.
+- electron-json-storage and es6-promise package is not needed anymore.
+- Unnecessary files for distribution.
 - Changelog info on README.md
 
 ## [1.0.1] - 2017-10-24

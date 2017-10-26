@@ -1,11 +1,13 @@
-import * as storage from 'electron-json-storage';
+import * as Materialize from 'materialize-css';
+
 import {assetExchangeApi} from "../burst/assets";
-import {AccountAssetsResponse, AssetInterface} from "../burst/interfaces/assets";
+import {AccountAssets, AccountAssetsResponse, AssetInterface} from "../burst/interfaces/assets";
 import {assetsComponents} from "./assets";
 import {accountsComponent} from "./accounts";
-import * as prm from 'es6-promise';
-
-const Promise = prm.Promise;
+import {database, Database} from "../helpers/database";
+import {DeferredAccountInterface} from "./interfaces/deferred";
+import {PayingAccountInterface} from "./interfaces/paying";
+import {CleanToPayResponseInterface, MergedDeferredAndAccounts} from "./interfaces/workerResponses";
 
 declare const operative, $;
 
@@ -52,7 +54,7 @@ export class CalculatorComponent {
         },
 
         removeExcluded: (accounts, excludes, cb) => {
-            let result = [];
+            let tmpAccounts = [];
             let totalAssets = 0;
             for (let i = 0, j = accounts.length; i < j; i++) {
                 const account = accounts[i];
@@ -69,11 +71,11 @@ export class CalculatorComponent {
 
                 if(!isExcluded) {
                     totalAssets += +account.quantityQNT;
-                    result.push(account);
+                    tmpAccounts.push(account);
                 }
             }
 
-            cb(result, totalAssets);
+            cb(tmpAccounts, totalAssets);
         },
 
         cleanToPay: (accounts, totalAssets, amount, payGreater, cb) => {
@@ -81,16 +83,16 @@ export class CalculatorComponent {
                 return +e.toString().match(/^-?\d+(?:\.\d{0,8})?/)[0];
             };
 
-            let toPay = [];
-            let toStore = [];
-            let tmpAssets = 0;
+            let toPay: PayingAccountInterface[] = [];
+            let toStore: DeferredAccountInterface[] = [];
+            let tmpAssets: number = 0;
             //let dec = 0 // Math.pow(10, 8 - decimals);
 
             for(let i = 0, j = accounts.length; i < j; i++) {
                 const account = accounts[i];
-                const assets = (account.quantityQNT)?  +account.quantityQNT : account.assets;
-                const percent = assets / totalAssets;
-                const prevAmount = account.amountToSend || 0;
+                const assets: number = (account.quantityQNT)?  +account.quantityQNT : account.assets;
+                const percent: number = assets / totalAssets;
+                const prevAmount: number = account.amountToSend || 0;
 
                 const amountToSend = toEightDecimals((percent * amount) + (+prevAmount));
 
@@ -105,7 +107,7 @@ export class CalculatorComponent {
             cb(toPay, toStore, tmpAssets);
         },
 
-        calculatePayout: (toPay, amount, totalAssets, cb) => {
+        calculatePayout: (toPay: PayingAccountInterface[], amount: number, totalAssets: number, cb) => {
             const toEightDecimals = (e) => {
                 return +e.toString().match(/^-?\d+(?:\.\d{0,8})?/)[0];
             };
@@ -122,15 +124,15 @@ export class CalculatorComponent {
     });
 
     private calculate() {
-        let tmpAmount = +this.$amount.val();
-        let tmpPayGreater = +this.$payGreater.val();
-        let tmpExclude = this.$exclude.val().split(' ').join('').split(',');
-        let tmpSubFee = this.$subFee.is(':checked');
-        let tmpIssuerPay = this.$issuerPay.is(':checked');
-        let tmpToDistribute = 0;
-        let tmpDecimals = assetsComponents.getCurrentAsset().decimals;
+        let tmpAmount: number = +this.$amount.val();
+        let tmpPayGreater: number = +this.$payGreater.val();
+        let tmpExclude: string[] = this.$exclude.val().split(' ').join('').split(',');
+        let tmpSubFee: boolean = this.$subFee.is(':checked');
+        let tmpIssuerPay: boolean = this.$issuerPay.is(':checked');
+        let tmpToDistribute: number = 0;
+        let tmpDecimals: number = assetsComponents.getCurrentAsset().decimals;
 
-        let tmpOldAssets = [];
+        let tmpDeferred: DeferredAccountInterface[] = [];
         tmpExclude.push('BURST-NU58-Z4QR-XXKE-94DHH');
 
         if(isNaN(tmpAmount) || !tmpAmount) {
@@ -139,34 +141,35 @@ export class CalculatorComponent {
 
         $('input, select, button').attr('disabled', 'disabled');
 
-        this.getStore(assetsComponents.getCurrentAsset().asset).then((oldAssets) => {
-            tmpOldAssets = oldAssets || [];
+        this.getStore(assetsComponents.getCurrentAsset().asset).then((deferred: DeferredAccountInterface[]) => {
+            tmpDeferred = deferred || [];
             return this.getAssetData();
-        }).then((newAssets) => {
+        }).then((newAssets: AccountAssets[]) => {
 
-            return this.merge(tmpOldAssets, newAssets);
-        }).then((assets: AssetInterface) => {
+            return this.merge(tmpDeferred, newAssets);
+        }).then((assets: MergedDeferredAndAccounts) => {
             if(tmpIssuerPay) {
                 tmpExclude.push(accountsComponent.getAccount());
             }
 
             return this.removeExcluded(assets, tmpExclude);
-        }).then(result => {
+        }).then((result: {accounts, totalAssets}) => {
             return this.cleanToPay(result.accounts, result.totalAssets, tmpAmount, tmpPayGreater);
-        }).then(result => {
+
+        }).then((result: CleanToPayResponseInterface) => {
             if (tmpSubFee) {
                 tmpAmount -= result.toPay.length;
             }
             this.toStore = result.toStore;
 
             return this.cleanToPay(result.toPay, result.totalAssets, tmpAmount, tmpPayGreater);
-        }).then(result => {
+        }).then((result: CleanToPayResponseInterface) => {
             this.toStore = this.toStore.concat(result.toStore);
 
             tmpToDistribute = result.totalAssets;
 
             return this.calculatePayout(result.toPay, tmpAmount, result.totalAssets);
-        }).then(toPay => {
+        }).then((toPay: PayingAccountInterface[]) => {
             this.toPay = toPay;
             this.amountToPay = tmpAmount;
 
@@ -260,13 +263,16 @@ ${postponed}`);
 
     private getStore(assetId) {
         return new Promise((resolve, reject) => {
-            storage.get(assetId, (err, data) => {
-                if(err) {
-                    console.log(err);
-                    return resolve();
+            database.get(assetId).then(data => {
+                resolve(data);
+            }).catch(e => {
+                if(e && e.errorCode === Database.ERROR.CORRUPTED_FILE) {
+                    Materialize.toast('WARNING. Unable to retrieve deferred data, file is corrupted!', 3000);
+                } else if(e) {
+                    console.log(e);
                 }
 
-                resolve(data);
+                resolve();
             });
         });
     }

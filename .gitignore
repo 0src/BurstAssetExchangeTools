@@ -7,3 +7,5 @@ npm-debug.log
 .build
 .envrc
 package-lock.json
+/history
+/data

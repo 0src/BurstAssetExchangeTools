@@ -5,7 +5,9 @@ const assets_1 = require("./components/assets");
 const servers_1 = require("./components/servers");
 const calculator_1 = require("./components/calculator");
 const activator_1 = require("./components/activator");
+const database_1 = require("./helpers/database");
 const { shell } = require('electron');
+database_1.database;
 servers_1.serversComponents.init().then(() => {
     $('#beforeApp').fadeOut(() => { $('#app').fadeIn(); });
     setInterval(() => {

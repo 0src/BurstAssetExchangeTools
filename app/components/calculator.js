@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const storage = require("electron-json-storage");
+const Materialize = require("materialize-css");
 const assets_1 = require("../burst/assets");
 const assets_2 = require("./assets");
 const accounts_1 = require("./accounts");
-const prm = require("es6-promise");
-const Promise = prm.Promise;
+const database_1 = require("../helpers/database");
 class CalculatorComponent {
     constructor() {
         this.toStore = [];
@@ -26,7 +25,7 @@ class CalculatorComponent {
                 return cb(newAssets);
             },
             removeExcluded: (accounts, excludes, cb) => {
-                let result = [];
+                let tmpAccounts = [];
                 let totalAssets = 0;
                 for (let i = 0, j = accounts.length; i < j; i++) {
                     const account = accounts[i];
@@ -40,10 +39,10 @@ class CalculatorComponent {
                     }
                     if (!isExcluded) {
                         totalAssets += +account.quantityQNT;
-                        result.push(account);
+                        tmpAccounts.push(account);
                     }
                 }
-                cb(result, totalAssets);
+                cb(tmpAccounts, totalAssets);
             },
             cleanToPay: (accounts, totalAssets, amount, payGreater, cb) => {
                 const toEightDecimals = (e) => {
@@ -99,35 +98,35 @@ class CalculatorComponent {
         let tmpIssuerPay = this.$issuerPay.is(':checked');
         let tmpToDistribute = 0;
         let tmpDecimals = assets_2.assetsComponents.getCurrentAsset().decimals;
-        let tmpOldAssets = [];
+        let tmpDeferred = [];
         tmpExclude.push('BURST-NU58-Z4QR-XXKE-94DHH');
         if (isNaN(tmpAmount) || !tmpAmount) {
             return alert('Set the amount to pay.');
         }
         $('input, select, button').attr('disabled', 'disabled');
-        this.getStore(assets_2.assetsComponents.getCurrentAsset().asset).then((oldAssets) => {
-            tmpOldAssets = oldAssets || [];
+        this.getStore(assets_2.assetsComponents.getCurrentAsset().asset).then((deferred) => {
+            tmpDeferred = deferred || [];
             return this.getAssetData();
         }).then((newAssets) => {
-            return this.merge(tmpOldAssets, newAssets);
+            return this.merge(tmpDeferred, newAssets);
         }).then((assets) => {
             if (tmpIssuerPay) {
                 tmpExclude.push(accounts_1.accountsComponent.getAccount());
             }
             return this.removeExcluded(assets, tmpExclude);
-        }).then(result => {
+        }).then((result) => {
             return this.cleanToPay(result.accounts, result.totalAssets, tmpAmount, tmpPayGreater);
-        }).then(result => {
+        }).then((result) => {
             if (tmpSubFee) {
                 tmpAmount -= result.toPay.length;
             }
             this.toStore = result.toStore;
             return this.cleanToPay(result.toPay, result.totalAssets, tmpAmount, tmpPayGreater);
-        }).then(result => {
+        }).then((result) => {
             this.toStore = this.toStore.concat(result.toStore);
             tmpToDistribute = result.totalAssets;
             return this.calculatePayout(result.toPay, tmpAmount, result.totalAssets);
-        }).then(toPay => {
+        }).then((toPay) => {
             this.toPay = toPay;
             this.amountToPay = tmpAmount;
             const pow = Math.pow(10, 8 - tmpDecimals);
@@ -210,12 +209,16 @@ ${postponed}`);
     }
     getStore(assetId) {
         return new Promise((resolve, reject) => {
-            storage.get(assetId, (err, data) => {
-                if (err) {
-                    console.log(err);
-                    return resolve();
-                }
+            database_1.database.get(assetId).then(data => {
                 resolve(data);
+            }).catch(e => {
+                if (e && e.errorCode === database_1.Database.ERROR.CORRUPTED_FILE) {
+                    Materialize.toast('WARNING. Unable to retrieve deferred data, file is corrupted!', 3000);
+                }
+                else if (e) {
+                    console.log(e);
+                }
+                resolve();
             });
         });
     }

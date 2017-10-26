@@ -7,9 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @author Zeus <https://github.com/GoldZeus>
  */
 const axios = require("axios");
-const prm = require("es6-promise");
 const utils_1 = require("../helpers/utils");
-const Promise = prm.Promise;
 exports.defaultWallets = ['http://localhost:8125/burst', 'https://wallet1.burstnation.com:8125/burst'];
 exports.burstApiConfig = {
     wallets: exports.defaultWallets,

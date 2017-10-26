@@ -1,11 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const fsPath = require("fs-path");
 const path = require("path");
-const fs = require("fs");
 const assets_1 = require("../components/assets");
 class History {
-    static save(type, data) {
-        fs.writeFile(path.resolve('history', `${type}-${assets_1.assetsComponents.getCurrentAsset().asset} [${new Date().toJSON().split('.')[0]}].txt`), data, console.log);
+    save(type, data) {
+        if (type === 'summary') {
+            this.d = new Date();
+        }
+        fsPath.writeFile(path.resolve('history', `${assets_1.assetsComponents.getCurrentAsset().asset}/${this.d.getFullYear()}.${this.d.getMonth() + 1}.${this.d.getDay()}.${this.d.getHours()}.${this.d.getMinutes()}.${this.d.getSeconds()}.${type}.txt`), data, console.log);
     }
 }
-exports.History = History;
+exports.history = new History();

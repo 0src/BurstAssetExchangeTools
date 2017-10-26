@@ -1,20 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const prm = require("es6-promise");
-const storage = require("electron-json-storage");
+const Materialize = require("materialize-css");
 const burst_1 = require("../burst/burst");
 const servers_1 = require("../burst/servers");
-const Promise = prm.Promise;
+const database_1 = require("../helpers/database");
 class ServersComponents {
     constructor() {
         this.firstCall = true;
-        this.storageKey = 'wallet-server';
+        this.storageKey = 'server.config';
         this.currentWallet = '';
         burst_1.burstApiConfig.wallets = burst_1.defaultWallets;
-        storage.get(this.storageKey, (err, data) => {
-            if (err || !data.length)
+        database_1.database.get(this.storageKey).then((data) => {
+            if (!data.length)
                 return;
             this.setWallet(data);
+        }).catch(err => {
+            console.log(err);
         });
     }
     /**
@@ -66,15 +67,19 @@ class ServersComponents {
         burst_1.burstApiConfig.currentWalletIndex = 0;
         burst_1.burstApiConfig.currentWallet = walletArr[0];
         this.currentWallet = walletArr[0];
-        this.$inputServerUrl.val(this.currentWallet);
+        this.$inputServerUrl.val(this.currentWallet.split('/burst')[0]);
         this.getBlockInfo().catch(e => { console.log(e); });
     }
     saveWallet(walletArr) {
-        storage.set(this.storageKey, walletArr);
+        console.log(walletArr);
+        // TODO: Setting the default server to the database isn't working, is it an error in the filename or what is going on?
+        database_1.database.set(this.storageKey, walletArr).then().catch(e => {
+            console.log(e);
+        });
         this.setWallet(walletArr);
     }
     clearWallets() {
-        storage.remove(this.storageKey);
+        database_1.database.set(this.storageKey, []);
         this.setWallet(burst_1.defaultWallets);
         this.$inputServerUrl.val('');
         this.getBlockInfo().catch(e => { console.log(e); });
@@ -84,13 +89,16 @@ class ServersComponents {
             e.preventDefault();
             let serverURI = $.trim(this.$inputServerUrl.val());
             if (this.$inputServerUrl.hasClass('invalid')) {
-                return alert('Incorrect wallet server.');
+                return Materialize.toast('Incorrect wallet server.', 3000);
             }
             if (!serverURI.length) {
                 this.clearWallets();
             }
             else {
                 serverURI = serverURI.split('/index.html')[0];
+                if (serverURI.indexOf(':') === -1) {
+                    Materialize.toast('Missing :PORT', 3000);
+                }
                 if (serverURI.indexOf('/burst') === -1) {
                     serverURI += '/burst';
                 }

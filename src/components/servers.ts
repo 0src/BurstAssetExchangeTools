@@ -1,11 +1,10 @@
-import * as prm from 'es6-promise';
-import * as storage from 'electron-json-storage';
+import * as Materialize from 'materialize-css';
 
 import {burstApiConfig, defaultWallets} from "../burst/burst";
 import {serversApi} from "../burst/servers";
 import {BlockchainStatusResponseInterface} from "../burst/interfaces/server";
+import {database} from "../helpers/database";
 
-const Promise = prm.Promise;
 declare const $;
 
 class ServersComponents {
@@ -17,16 +16,18 @@ class ServersComponents {
     $btnSaveServer;
     $modalEditServer;
     firstCall = true;
-    storageKey = 'wallet-server';
+    storageKey = 'server.config';
     currentWallet = '';
 
     constructor() {
         burstApiConfig.wallets = defaultWallets;
 
-        storage.get(this.storageKey, (err, data) => {
-            if(err || !data.length) return;
+        database.get(this.storageKey).then((data: string[]) => {
+            if(!data.length) return;
 
             this.setWallet(data);
+        }).catch(err => {
+            console.log(err);
         });
     }
 
@@ -92,17 +93,21 @@ class ServersComponents {
         burstApiConfig.currentWalletIndex = 0;
         burstApiConfig.currentWallet = walletArr[0];
         this.currentWallet = walletArr[0];
-        this.$inputServerUrl.val(this.currentWallet);
+        this.$inputServerUrl.val(this.currentWallet.split('/burst')[0]);
 
         this.getBlockInfo().catch(e => { console.log(e) });
     }
 
     private saveWallet(walletArr: string[]) {
-        storage.set(this.storageKey, walletArr);
+        console.log(walletArr);
+        // TODO: Setting the default server to the database isn't working, is it an error in the filename or what is going on?
+        database.set(this.storageKey, walletArr).then().catch(e => {
+            console.log(e);
+        });
         this.setWallet(walletArr);
     }
     private clearWallets() {
-        storage.remove(this.storageKey);
+        database.set(this.storageKey, []);
         this.setWallet(defaultWallets);
 
         this.$inputServerUrl.val('');
@@ -117,13 +122,17 @@ class ServersComponents {
             let serverURI = $.trim(this.$inputServerUrl.val());
 
             if(this.$inputServerUrl.hasClass('invalid')) {
-                return alert('Incorrect wallet server.');
+                return Materialize.toast('Incorrect wallet server.', 3000);
             }
 
             if(!serverURI.length) {
                 this.clearWallets();
             } else {
                 serverURI = serverURI.split('/index.html')[0];
+
+                if(serverURI.indexOf(':') === -1) {
+                    Materialize.toast('Missing :PORT', 3000);
+                }
 
                 if(serverURI.indexOf('/burst') === -1) {
                     serverURI += '/burst'

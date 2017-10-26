@@ -5,10 +5,7 @@
  * @author Zeus <https://github.com/GoldZeus>
  */
 import * as axios from 'axios';
-import * as prm from 'es6-promise';
 import {utils} from "../helpers/utils";
-
-const Promise = prm.Promise;
 
 export const defaultWallets = ['http://localhost:8125/burst', 'https://wallet1.burstnation.com:8125/burst'];
 
