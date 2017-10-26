@@ -99,8 +99,6 @@ class ServersComponents {
     }
 
     private saveWallet(walletArr: string[]) {
-        console.log(walletArr);
-        // TODO: Setting the default server to the database isn't working, is it an error in the filename or what is going on?
         database.set(this.storageKey, walletArr).then().catch(e => {
             console.log(e);
         });
