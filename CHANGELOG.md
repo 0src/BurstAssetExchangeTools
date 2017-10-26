@@ -10,6 +10,7 @@ At release time, it will be sent to the release version number.
 
 ## [1.0.2] - 2017-10-26
 ### Added
+- You can now change the server you use.
 - History files are created when the payout is sent.
 - Type declaration for 90% of the code.
 - Added CHANGELOG.md
