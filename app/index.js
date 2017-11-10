@@ -22,7 +22,8 @@ function createWindow () {
         slashes: true
     }));
 
-    //win.webContents.openDevTools();
+    // TODO: uncomment this line on production
+    //win.setMenu(null);
 
     // Open the DevTools.
     //win.webContents.openDevTools();

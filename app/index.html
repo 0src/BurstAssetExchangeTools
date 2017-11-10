@@ -92,6 +92,11 @@
           <label for="asset">Asset</label>
         </div>
 
+        <div class="col s12 hide-on-med-and-up">
+          <input type="checkbox" class="filled-in" id="onlyIssuer" checked="checked" />
+          <label for="onlyIssuer">ISSUER ASSETS</label>
+        </div>
+
         <div class="input-field col s12 m4">
           <input type="number" id="amount" min="0" step="any" placeholder="0" class="validate">
           <label for="amount">Amount to Pay</label>
@@ -101,10 +106,16 @@
           <label for="payGreater">Pay if greater or equal</label>
         </div>
 
-        <div class="col s12 m4 offset-m4">
+        <div class="col s12 m4 hide-on-small-only">
+          <input type="checkbox" class="filled-in" id="onlyIssuerBig" checked="checked" />
+          <label for="onlyIssuerBig">ISSUER ASSETS</label>
+        </div>
+
+        <div class="col s12 m4">
           <input type="checkbox" class="filled-in" id="subFee" checked="checked" />
           <label for="subFee">SUBSTRACT FEE</label>
         </div>
+
 
         <div class="input-field col s12">
           <input type="text" id="exclude" placeholder="BURST-ADD, BURST-ADD">

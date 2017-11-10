@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 This section is used to see what changes you might expect in upcoming releases.
 At release time, it will be sent to the release version number.
 
+## [1.0.3] - 2017-11-10
+### Changed
+- Solved issue with decimals for some assets.
+
 ## [1.0.2] - 2017-10-26
 ### Added
 - You can now change the server you use.

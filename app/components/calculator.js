@@ -129,10 +129,10 @@ class CalculatorComponent {
         }).then((toPay) => {
             this.toPay = toPay;
             this.amountToPay = tmpAmount;
-            const pow = Math.pow(10, 8 - tmpDecimals);
+            const pow = Math.pow(10, tmpDecimals);
             let accountHmtl = '';
             toPay.forEach((account) => {
-                const assets = (tmpDecimals > 0) ? account.assets / pow : account.assets;
+                const assets = (tmpDecimals > 0) ? (account.assets / pow) : account.assets;
                 accountHmtl += `${assets}, ${account.accountRS}, ${account.amountToSend}\n`;
             });
             let postponed = '';
